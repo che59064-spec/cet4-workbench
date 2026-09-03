@@ -1,0 +1,40 @@
+{
+  "name": "cet4-workbench",
+  "productName": "四级备考工作台",
+  "version": "1.0.0",
+  "description": "大学英语四级（CET-4）备考工作台 · 桌面版",
+  "main": "main.js",
+  "author": "Chen Ruijie",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --win portable",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.ruijie.cet4workbench",
+    "productName": "四级备考工作台",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "words-data.js"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  }
+}

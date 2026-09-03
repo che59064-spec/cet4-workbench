@@ -1,0 +1,30 @@
+# 依赖
+node_modules/
+
+# 构建产物（electron-builder 输出）
+dist/
+release/
+out/
+*.exe
+*.msi
+*.blockmap
+*.yml.dist
+
+# 生成/缓存
+*.log
+smoke_out.txt
+.chk*.js
+_chk*.js
+_chk7.js
+_chk8.js
+_chk9.js
+build_words_v2.py
+
+# 大数据源（应用已内置 words-data.js，克隆后无需这些冗余源文件）
+cet4_s2.json
+cet4_s3.json
+cet4_sentence.json
+
+# 系统
+.DS_Store
+Thumbs.db
