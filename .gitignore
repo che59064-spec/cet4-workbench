@@ -20,6 +20,11 @@ _chk8.js
 _chk9.js
 build_words_v2.py
 
+# 临时验证图（下划线开头）
+_*.png
+_*.bmp
+_*.jpg
+
 # 大数据源（应用已内置 words-data.js，克隆后无需这些冗余源文件）
 cet4_s2.json
 cet4_s3.json
