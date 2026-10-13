@@ -420,6 +420,18 @@ body::before{opacity:.06}
 .page-head h2{color:#F4F8FB;text-shadow:0 0 24px rgba(0,245,212,.16)}
 .brand h1{color:#F4F8FB}
 .stat-icon{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 16px rgba(0,0,0,.3)}
+/* ===== 真折射玻璃按钮（React Bits GlassSurface 原生移植） ===== */
+.gs-ready{position:relative;isolation:isolate;transition:transform .16s ease,box-shadow .16s ease}
+.gs-ready::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;pointer-events:none;z-index:2;
+  background:linear-gradient(150deg,rgba(255,255,255,.62),rgba(255,255,255,.10) 42%,rgba(255,255,255,.04) 62%,rgba(255,255,255,.42));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.gs-ready::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;
+  background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,transparent 44%,transparent 66%,rgba(255,255,255,.08) 100%)}
+.gs-ready:hover{transform:translateY(-1px)}
+.gs-ready:active{transform:translateY(0) scale(.985)}
+.gs-nofx::before,.gs-nofx::after{display:none}
 </style>
 <script src="words-data.js"></script>
 </head>
@@ -3366,6 +3378,91 @@ document.addEventListener('keydown', e => {
   }
 });
 
+/* ===== 真折射玻璃按钮引擎（React Bits GlassSurface 原理原生移植） ===== */
+const GS_TARGETS = '.btn:not(.gs-ready),.cat-tab:not(.gs-ready),.play-btn:not(.gs-ready)';
+const GS_FX = { scale: -84, greenOffset: 8, blueOffset: 16, blurPx: 0.5, edgeWidth: 0.10, centerBlur: 8, centerBright: 50, centerOpacity: 0.9 };
+let gsSeq = 0, gsDefs = null, gsTimer = null, gsResizeT = null;
+function gsEnsureDefs(){
+  if(gsDefs && document.body.contains(gsDefs)) return gsDefs;
+  gsDefs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  gsDefs.setAttribute('width', '0'); gsDefs.setAttribute('height', '0');
+  gsDefs.setAttribute('aria-hidden', 'true');
+  gsDefs.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+  document.body.appendChild(gsDefs);
+  return gsDefs;
+}
+function gsMapUri(w, h, r, edge){
+  const bw = Math.max(0.5, edge), cb = GS_FX.centerBlur;
+  const svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs>'
+    + '<linearGradient id="rg" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/></linearGradient>'
+    + '<linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/></linearGradient>'
+    + '<filter id="cb" filterUnits="userSpaceOnUse" x="0" y="0" width="' + w + '" height="' + h + '" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="' + cb + '"/></filter>'
+    + '</defs>'
+    + '<rect width="' + w + '" height="' + h + '" fill="black"/>'
+    + '<rect width="' + w + '" height="' + h + '" rx="' + r + '" fill="url(#rg)"/>'
+    + '<rect width="' + w + '" height="' + h + '" rx="' + r + '" fill="url(#bg)" style="mix-blend-mode:difference"/>'
+    + '<rect x="' + bw + '" y="' + bw + '" width="' + Math.max(1, w - 2 * bw) + '" height="' + Math.max(1, h - 2 * bw) + '" rx="' + Math.max(1, r - bw) + '" fill="hsl(0 0% ' + GS_FX.centerBright + '% / ' + GS_FX.centerOpacity + ')" filter="url(#cb)"/>'
+    + '</svg>';
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+function glassify(el){
+  if(!el || el.classList.contains('gs-ready')) return;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  if(w < 8 || h < 8) return;
+  const r = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 10;
+  const edge = Math.min(w, h) * GS_FX.edgeWidth * 0.5;
+  const id = 'gsf-' + (++gsSeq);
+  const map = gsMapUri(w, h, r, edge);
+  const ns = 'http://www.w3.org/2000/svg';
+  const f = document.createElementNS(ns, 'filter');
+  f.setAttribute('id', id);
+  f.setAttribute('color-interpolation-filters', 'sRGB');
+  f.setAttribute('x', '0%'); f.setAttribute('y', '0%'); f.setAttribute('width', '100%'); f.setAttribute('height', '100%');
+  f.innerHTML = '<feImage href="' + map + '" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map"/>'
+    + '<feDisplacementMap in="SourceGraphic" in2="map" scale="' + GS_FX.scale + '" xChannelSelector="R" yChannelSelector="G" result="dr"/>'
+    + '<feColorMatrix in="dr" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/>'
+    + '<feDisplacementMap in="SourceGraphic" in2="map" scale="' + (GS_FX.scale + GS_FX.greenOffset) + '" xChannelSelector="R" yChannelSelector="G" result="dg"/>'
+    + '<feColorMatrix in="dg" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"/>'
+    + '<feDisplacementMap in="SourceGraphic" in2="map" scale="' + (GS_FX.scale + GS_FX.blueOffset) + '" xChannelSelector="R" yChannelSelector="G" result="db"/>'
+    + '<feColorMatrix in="db" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/>'
+    + '<feBlend in="red" in2="green" mode="screen" result="rg"/>'
+    + '<feBlend in="rg" in2="blue" mode="screen" result="out"/>'
+    + '<feGaussianBlur in="out" stdDeviation="' + GS_FX.blurPx + '"/>';
+  gsEnsureDefs().appendChild(f);
+  el.style.setProperty('-webkit-backdrop-filter', 'url(#' + id + ') saturate(1.2)');
+  el.style.setProperty('backdrop-filter', 'url(#' + id + ') saturate(1.2)');
+  el.dataset.gsf = id;
+  el.dataset.gsw = w; el.dataset.gsh = h;
+  el.classList.add('gs-ready');
+}
+function glassifyAll(root){
+  try{ (root || document).querySelectorAll(GS_TARGETS).forEach(glassify); }catch(e){}
+}
+function gsRefresh(){
+  document.querySelectorAll('.gs-ready[data-gsw]').forEach(el => {
+    if(Math.abs(el.offsetWidth - el.dataset.gsw) > 2 || Math.abs(el.offsetHeight - el.dataset.gsh) > 2){
+      const old = el.dataset.gsf;
+      if(old){ const of = document.getElementById(old); if(of) of.remove(); }
+      el.style.removeProperty('backdrop-filter'); el.style.removeProperty('-webkit-backdrop-filter');
+      el.classList.remove('gs-ready');
+      glassify(el);
+    }
+  });
+}
+function glassifyWatch(){
+  glassifyAll();
+  const mo = new MutationObserver(() => {
+    if(gsTimer) clearTimeout(gsTimer);
+    gsTimer = setTimeout(() => { gsTimer = null; glassifyAll(); }, 90);
+  });
+  mo.observe(document.body, {childList: true, subtree: true});
+  window.addEventListener('resize', () => {
+    if(gsResizeT) clearTimeout(gsResizeT);
+    gsResizeT = setTimeout(() => { gsResizeT = null; gsRefresh(); }, 220);
+  });
+}
+
 /* ================= 启动 ================= */
 loadDB();
 restoreImport();
@@ -3373,6 +3470,7 @@ sanitizePapers();
 if(DB.timerRunning) startTimer();
 window.addEventListener('beforeunload', saveDB);
 if(DB.exam) switchView('exam'); else switchView('dashboard');
+glassifyWatch();
 </script>
 </body>
 </html>
