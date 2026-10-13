@@ -4,6 +4,7 @@ import ctypes, ctypes.wintypes as wt, struct, sys, time
 
 TITLE = "CET-4 四级备考工作台"
 OUT = sys.argv[1] if len(sys.argv) > 1 else "_win_shot.bmp"
+PAD = int(sys.argv[2]) if len(sys.argv) > 2 else 0  # 向外扩展像素（验证窗口外阴影/圆角）
 
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -25,9 +26,9 @@ time.sleep(0.6)
 
 rect = wt.RECT()
 u.GetWindowRect(hwnd, ctypes.byref(rect))
-x, y = rect.left, rect.top
-w, h = rect.right - rect.left, rect.bottom - rect.top
-print("RECT", x, y, w, h)
+x, y = rect.left - PAD, rect.top - PAD
+w, h = (rect.right - rect.left) + PAD * 2, (rect.bottom - rect.top) + PAD * 2
+print("RECT", x, y, w, h, "PAD", PAD)
 
 srcdc = g.CreateDCW("DISPLAY", None, None, None)
 memdc = g.CreateCompatibleDC(srcdc)

@@ -3565,6 +3565,10 @@ restoreImport();
 sanitizePapers();
 if(DB.timerRunning) startTimer();
 window.addEventListener('beforeunload', saveDB);
+/* 旧结构考试成绩（无法套用新 710 分制）自动归档：记录保留在考试历史，不再停在旧报告页 */
+if(DB.exam && DB.exam.status === 'done' && DB.exam.score && DB.exam.score.translationScore == null){
+  DB.exam = null; saveDB();
+}
 if(DB.exam) switchView('exam'); else switchView('dashboard');
 glassifyWatch();
 </script>
