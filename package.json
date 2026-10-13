@@ -23,6 +23,7 @@
     },
     "files": [
       "main.js",
+      "preload.js",
       "index.html",
       "words-data.js"
     ],
