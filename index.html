@@ -37,9 +37,9 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
 .nav-item .ico{font-size:17px;width:22px;text-align:center}
 .side-foot{font-size:11px;color:#a8b0bd;text-align:center;padding:12px 0 2px}
 
-/* ===== 主区域 ===== */
-.main{flex:1;margin-left:232px;padding:26px 30px 40px;max-width:1080px}
-.view{display:none;animation:fadeIn .25s ease}
+/* ===== 主区域（内容视觉居中） ===== */
+.main{flex:1;margin-left:232px;padding:26px 30px 40px;display:flex;flex-direction:column;align-items:center}
+.view{display:none;animation:fadeIn .25s ease;width:100%;max-width:1080px}
 .view.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:10px}

@@ -8,6 +8,7 @@ function createWindow(){
     height: 840,
     minWidth: 980,
     minHeight: 660,
+    center: true,                 // 启动时屏幕居中
     frame: false,                 // 无系统标题栏：顶部融入应用内
     transparent: true,            // 窗口透明：让页面自绘圆角边框
     hasShadow: true,
